@@ -1,0 +1,55 @@
+name: GitHub-Docker Hub MLOps pipeline - Youmna  # Nom du workflow pour faciliter l'identification
+
+env:
+  DOCKER_USER: ${{ secrets.DOCKER_USER }}        # Utilisation des secrets pour Docker Hub username
+  DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}# Utilisation des secrets pour Docker Hub password
+  REPO_NAME: ${{ secrets.REPO_NAME }}            # Utilisation des secrets pour le nom du dépôt sur Docker Hub
+
+on:                                              # Définit les événements qui déclencheront le workflow
+  push:
+    branches:
+      - main                                     # Déclenche le workflow sur les push vers la branche main
+  pull_request:
+    branches:
+      - main                                     # Déclenche le workflow sur les pull requests vers la branche main
+
+jobs:
+  ci_pipeline:                                   # Définition du job d'intégration continue
+    runs-on: ubuntu-latest                       # Spécifie l'environnement d'exécution, ici un runner Ubuntu
+    steps:
+      - uses: actions/checkout@v2                # Étape pour cloner le code source du dépôt
+      - name: Set up Python 3.9                  # Configurer Python 3.9 pour l'exécution
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9
+      - name: Install dependencies               # Installer les dépendances du projet Python
+        run: |
+          python -m pip install --upgrade pip    # Mettre à jour pip
+          pip install -r requirements.txt        # Installer les dépendances listées dans requirements.txt
+      - name: Format                             # Formater le code source avec Black
+        run: |
+          black app.py
+      - name: Lint                               # Lancer l'analyse statique du code avec Pylint
+        run: |
+          pylint --disable=R,C app.py
+      - name: Run Tests                          # Exécuter les tests avec pytest
+        run: |
+          python -m pytest -vv test.py
+
+  cd_pipeline:                                   # Définition du job de déploiement continu
+    needs: ci_pipeline                           # Ce job nécessite que le job ci_pipeline soit terminé avec succès
+    runs-on: ubuntu-latest                       # Utilisation du même type de runner
+    steps:
+      - uses: actions/checkout@v2                # Cloner à nouveau le code source pour ce job
+      - name: docker login                       # Se connecter à Docker Hub
+        run: |
+          echo $DOCKER_PASSWORD | docker login --username $DOCKER_USER --password-stdin
+      - name: Get current date                   # Obtenir la date actuelle pour taguer l'image Docker
+        id: date
+        run: echo "::set-output name=date::$(date +'%Y-%m-%d-%M-%S')"
+      - name: Build the Docker image             # Construire l'image Docker à partir du Dockerfile
+        run: |
+          docker build . --file Dockerfile --tag $DOCKER_USER/$REPO_NAME:${{ steps.date.outputs.date }}
+      - name: Docker Push                        # Pousser l'image Docker sur Docker Hub
+        run: |
+          docker push $DOCKER_USER/$REPO_NAME:${{ steps.date.outputs.date }}

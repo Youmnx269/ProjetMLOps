@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Prédictive</title>
+    <style>
+        body {
+            background-color: beige; /* Modifié de lightslategray à beige */
+            text-align: center;
+            padding: 20px;
+        }
+
+        #form-container {
+            background-color: rgb(168, 131, 61);
+            border-radius: 20px;
+            padding: 20px;
+            width: 400px;
+            margin: auto;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: darkgreen; /* Modifié de darkcyan à darkgreen */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 10px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: green; /* Modifié de coral à une teinte de vert plus claire pour le survol */
+        }
+
+        h2, h3 {
+            color: blue;
+        }
+
+        .prediction-text {
+            margin-top: 20px;
+            font-size: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="form-container">
+        <form action="{{ url_for('predict') }}" method="post">
+            <h2>Analyse Prédictive</h2>
+            <h3>Nombre de lignes de crédit</h3>
+            <input id="credit_lines_outstanding" name="credit_lines_outstanding" type="number" required>
+            <h3>Montant du prêt en cours</h3>
+            <input id="loan_amt_outstanding" name="loan_amt_outstanding" type="number" required>
+            <h3>Total des dettes en cours</h3>
+            <input id="total_debt_outstanding" name="total_debt_outstanding" type="number" required>
+            <h3>Revenu</h3>
+            <input id="income" name="income" type="number" required>
+            <h3>Années d'emploi</h3>
+            <input id="years_employed" name="years_employed" type="number" required>
+            <h3>Score FICO</h3>
+            <input id="fico_score" name="fico_score" type="number" required>
+            <br>
+            <button id="sub" type="submit">Résultat</button>
+        </form>
+        <div class="prediction-text">{{ prediction_text }}</div>
+    </div>
+</body>
+</html>
